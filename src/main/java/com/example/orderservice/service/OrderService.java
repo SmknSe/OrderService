@@ -2,7 +2,7 @@ package com.example.orderservice.service;
 
 import com.example.orderservice.model.Order;
 import com.example.orderservice.persistence.OrderRepo;
-import com.example.orderservice.util.OrderDTOMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import model.OrderDTO;
@@ -15,7 +15,8 @@ import java.util.List;
 public class OrderService {
     private final OrderRepo orderRepo;
 
-    private final OrderDTOMapper mapper;
+
+    private final ObjectMapper mapper;
 
     public OrderDTO createOrder(OrderDTO orderDTO) {
         var savedOrder = orderRepo.save(
@@ -23,15 +24,15 @@ public class OrderService {
                         .total(orderDTO.total())
                         .build()
         );
-        return mapper.apply(savedOrder);
+        return mapper.convertValue(savedOrder, OrderDTO.class);
     }
 
     public List<OrderDTO> getAllOrders() {
-        return orderRepo.findAll().stream().map(mapper).toList();
+        return orderRepo.findAll().stream().map((order) -> mapper.convertValue(order, OrderDTO.class)).toList();
     }
 
     public OrderDTO getOrderById(String id) {
-        return orderRepo.findById(id).map(mapper).orElseThrow(() -> new EntityNotFoundException("Order not found"));
+        return orderRepo.findById(id).map((order) -> mapper.convertValue(order, OrderDTO.class)).orElseThrow(() -> new EntityNotFoundException("Order not found"));
     }
 
     public void deleteOrderById(String id) {
